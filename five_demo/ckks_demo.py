@@ -1,5 +1,4 @@
 from seal import *
-import pickle
 import time
 
 parms = EncryptionParameters(scheme_type.ckks)

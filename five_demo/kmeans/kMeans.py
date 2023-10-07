@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
-
+import time
 
 # 计算数据点两两之间的距离
 def getDistanceMatrix(datas):
@@ -197,7 +197,13 @@ if __name__ == "__main__":
 
         datas = np.array(lines).astype(np.float32)
         # 计算距离矩阵
+        start_time = time.time()
+
         dists = getDistanceMatrix(datas)
+
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"程序执行时间：{execution_time}秒")
         # 计算dc
         dc = select_dc(dists)
         centers, labs = basic_cluster(dc, dists)

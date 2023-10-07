@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import csv
 from seal import *
 
-
 # 计算数据点两两之间的距离
 def getDistanceMatrix(datas):
     N, D = np.shape(datas)
