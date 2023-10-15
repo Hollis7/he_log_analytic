@@ -201,7 +201,7 @@ def draw_decision(rho, deltas, name="0_decision.jpg"):
     plt.show()
 
 
-def draw_cluster(datas, labs, centers, dic_colors, name="0_cluster.jpg"):
+def draw_cluster(datas, labs, centers, dic_colors, name="1_cluster.jpg"):
     plt.cla()
     K = np.shape(centers)[0]
 

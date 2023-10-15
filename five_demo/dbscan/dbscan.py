@@ -47,7 +47,6 @@ def dist(t1, t2):
 # dis = dist((1,1),(3,4))
 # print(dis)
 
-
 # DBSCAN算法，参数为数据集，Eps为指定半径参数，MinPts为制定邻域密度阈值
 def dbscan(Data, Eps, MinPts):
     num = len(Data)  # 点的个数

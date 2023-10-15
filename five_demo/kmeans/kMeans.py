@@ -195,7 +195,7 @@ if __name__ == "__main__":
                 lines1.append(line[0:-1])
         lines = lines1[0:]
 
-        datas = np.array(lines).astype(np.float32)
+        datas = np.array(lines).astype(np.float32)*10
         # 计算距离矩阵
         start_time = time.time()
 

@@ -177,4 +177,7 @@ end_time = time.time()
 execution_time = end_time - start_time
 print(f"程序执行时间：{execution_time}秒")
 labels = extract_cluster(exemplars, similarity)
-plotFeature(data, labels)
+plt.scatter(data[:,0],data[:,1],c=labels,marker='o')
+# 保存图表为PNG文件
+plt.savefig('ckks_ap788.png')
+plt.show()

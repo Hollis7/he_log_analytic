@@ -106,4 +106,8 @@ execution_time = end_time - start_time
 print(f"程序执行时间：{execution_time}秒")
 labels=extract_dbscan(data,orders,reach_dists,3)
 plotReachability(reach_dists[orders],3)
-plotFeature(data,labels)
+plt.scatter(data[:,0],data[:,1],c=labels,marker='o')
+plt.title('optics cluster')
+# 保存图表为PNG文件
+plt.savefig('optics.png')
+plt.show()

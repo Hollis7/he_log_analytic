@@ -5,7 +5,7 @@ import numpy as np
 import sklearn
 from seal import *
 from sklearn.datasets import load_iris
-
+import matplotlib.pyplot as plt
 
 def euler_distance(point1: np.ndarray, point2: list) -> float:
     """
@@ -145,7 +145,15 @@ if __name__ == '__main__':
     end_time = time.time()
     execution_time = end_time - start_time
     print(f"程序执行时间：{execution_time}秒")
-
+    x = []
+    y = []
+    for data in iris.data:
+        x.append(data[0])
+        y.append(data[1])
+    plt.figure(figsize=(8, 6), dpi=80)
+    plt.scatter(x, y, c=my.labels, marker='o')
+    plt.savefig("ckks_result_fig")
+    plt.show()
     # data = [[16.9,0],[38.5,0],[39.5,0],[80.8,0],[82,0],[834.6,0],[116.1,0]]
     # my = Hierarchical(4)
     # my.fit(data)
