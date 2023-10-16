@@ -78,6 +78,8 @@ def getDistanceMatrixByCKKs(datas):
 
             DResult = decode_result[0:D]
             sumReslut = np.sum(DResult)
+            if sumReslut < 1e-9:
+                sumReslut = 0
             dists[i, j] = np.sqrt(sumReslut)
 
     return dists
@@ -176,6 +178,8 @@ exemplars, similarity = MYAffinityPropagation(data, preference=-60, damping=0.9,
 end_time = time.time()
 execution_time = end_time - start_time
 print(f"程序执行时间：{execution_time}秒")
+print(similarity)
+print(exemplars)
 labels = extract_cluster(exemplars, similarity)
 plt.scatter(data[:,0],data[:,1],c=labels,marker='o')
 # 保存图表为PNG文件

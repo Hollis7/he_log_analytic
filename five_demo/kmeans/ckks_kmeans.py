@@ -65,6 +65,8 @@ def getDistanceMatrixByCKKs(datas):
 
             DResult = decodeResult[0:D]
             sumReslut = np.sum(DResult)
+            if sumReslut < 1e-9:
+                sumReslut = 0
             dists[i, j] = np.sqrt(sumReslut)
 
     return dists
