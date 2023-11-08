@@ -1,5 +1,5 @@
-import sys
 from numpy import *
+from read_excel import *
 
 
 # 定义一个函数，用于从文件加载数据集
@@ -59,19 +59,19 @@ def smoSimple(data, label, C, toler, maxIter):
                     L = max(0, alpha[i] + alpha[j] - C)
                     H = min(C, alpha[j] + alpha[i])
                 if L == H:
-                    print("L==H")
+                    # print("L==H")
                     continue
                 eta = 2.0 * dataMatrix[i, :] * dataMatrix[j, :].T - dataMatrix[i, :] * dataMatrix[i, :].T - dataMatrix[
                                                                                                             j,
                                                                                                             :] * dataMatrix[
                                                                                                                  j, :].T
                 if eta >= 0:
-                    print("eta >= 0")
+                    # print("eta >= 0")
                     continue
                 alpha[j] -= labelMatrix[j] * (Ei - Ej) / eta
                 alpha[j] = clipAlpha(alpha[j], H, L)
                 if abs(alpha[j] - alphaJOld) < 0.00001:
-                    print("j not move enough")
+                    # print("j not move enough")
                     continue
                 alpha[i] += labelMatrix[j] * labelMatrix[i] * (alphaJOld - alpha[j])
                 b1 = b - Ei - labelMatrix[i] * (alpha[i] - alphaIOld) * dataMatrix[i, :] * dataMatrix[i, :].T \
@@ -115,20 +115,57 @@ def train(data, label):
 
 
 def predict(w, b, data, label):
-    right = 0
+    true_positives = 0
+    false_positives = 0
+    true_negatives = 0
+    false_negatives = 0
+
     for i in range(len(data)):
-        f = dot(w,data[i]) + b
+        f = dot(w, data[i]) + b
         if f > 0:
             res = 1
         else:
             res = -1
-        if res == label[i]:
-            right += 1
-    print(right / len(data))
+
+        if res == 1 and label[i] == 1:
+            true_positives += 1
+        elif res == 1 and label[i] == -1:
+            false_positives += 1
+        elif res == -1 and label[i] == 1:
+            false_negatives += 1
+        else:
+            true_negatives += 1
+
+    # 计算准确率（Accuracy）
+    accuracy = (true_positives + true_negatives) / len(data)
+
+    # 计算召回率（Recall）
+    recall = true_positives / (true_positives + false_negatives)
+
+    # 计算 F1 分数（F1-Score）
+    f1_score = 2 * (true_positives / (2 * true_positives + false_positives + false_negatives))
+
+    print(f"准确率（Accuracy）: {accuracy:.2f}")
+    print(f"召回率（Recall）: {recall:.2f}")
+    print(f"F1 分数（F1-Score）: {f1_score:.2f}")
+
+
+def save_w_b(w, b):
+    savetxt("w.txt", w)
+    savetxt("b.txt", b)
+
+
+def load_w_b():
+    w = loadtxt("w.txt")
+    b = loadtxt("b.txt")
+    return w, b
 
 
 if __name__ == '__main__':
-    data, label = loadDataSet('testSet.txt')  # 从文件加载数据
-    w, b = train(data, label)
-    data = array(data)
-    predict(w,b,data,label)
+    excel_file = "data_test.xlsx"
+    data, label = excel_to_narray(excel_file)  # 从文件加载数据
+    # w, b = train(data, label)
+    # save_w_b(w, b)
+    w,b = load_w_b()
+    data = array(data)、
+    predict(w, b, data, label)
