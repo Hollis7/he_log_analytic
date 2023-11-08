@@ -1,6 +1,6 @@
 from numpy import *
 from read_excel import *
-
+from three_operator.save_param import *
 
 # 定义一个函数，用于从文件加载数据集
 def loadDataSet(filename):
@@ -161,11 +161,14 @@ def load_w_b():
     return w, b
 
 
+
+
 if __name__ == '__main__':
     excel_file = "data_test.xlsx"
     data, label = excel_to_narray(excel_file)  # 从文件加载数据
     # w, b = train(data, label)
     # save_w_b(w, b)
-    w,b = load_w_b()
-    data = array(data)、
+    w, b = load_w_b()
+    data = array(data)
     predict(w, b, data, label)
+
