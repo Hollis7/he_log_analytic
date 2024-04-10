@@ -100,7 +100,8 @@ def encry_data(excel_file):
 
 
 if __name__ == '__main__':
+    excel_path = 'datasets/'
     excel_file = "data_test.xlsx"
-    cipher_list,label = encry_data(excel_file)
+    cipher_list,label = encry_data(excel_path+excel_file)
     plain_res_list = he_calculator(cipher_list)
     he_predict(plain_res_list,label)
