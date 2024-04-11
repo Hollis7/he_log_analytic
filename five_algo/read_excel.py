@@ -20,6 +20,8 @@ cipher_path = 'cipherbin/'
 '''
 读取训练或者测试的excel数据
 '''
+
+
 def excel_to_narray(excel_file):
     # 读取Excel文件
     df = pd.read_excel(excel_file)
@@ -30,9 +32,12 @@ def excel_to_narray(excel_file):
 
     return data, labels
 
+
 '''
 用日志中提取的关键词同态加密放到数据库表logs中，用excel中的表数据模拟
 '''
+
+
 def excel_to_database(excel_file):
     print('-' * 10 + '日志数据和关键数据存储数据库表logs' + '-' * 10 + '\n')
     # 加密准备
@@ -61,9 +66,12 @@ def excel_to_database(excel_file):
                           context, public_key, scale, slot_count, cipher_path)
     print('-' * 10 + '日志数据和关键数据存储数据库表logs完成' + '-' * 10 + '\n')
 
+
 '''
 对excel的每行数据进行加密，保存到数据库，取用时只取用第一个元素
 '''
+
+
 def table_cipher_save(user_id, disk_speed_per, cpu, gpu, pass_failed, authorization, transgression_number, up_traffic,
                       down_traffic,
                       context, public_key, scale, slot_count, cipher_path='cipherbin/'):
@@ -100,8 +108,9 @@ def table_cipher_save(user_id, disk_speed_per, cpu, gpu, pass_failed, authorizat
     save_cipher(svm_data_plain, context, public_key, scale, cipher_name=cipher_path + "svm_cipher.bin")
 
     print('-' * 10 + 'AES加密日志' + '-' * 10 + '\n')
-    aes_plain = (" disk_speed_per:" + str(disk_speed_per) + " cpu:" + str(cpu) + " gpu:" + str(gpu) + " pass_failed:" + str(pass_failed) + \
-                " authorization：" + str(authorization) + "transgression number:" + str(transgression_number)).encode('utf-8')
+    aes_plain = (" disk_speed_per:" + str(disk_speed_per) + " cpu:" + str(cpu) + " gpu:" + str(
+        gpu) + " pass_failed:" + str(pass_failed) + " authorization：" + str(
+        authorization) + "transgression number:" + str(transgression_number)).encode('utf-8')
     aes_key, iv = load_key_iv(aes_key_path + 'key.bin', aes_key_path + 'iv.bin')
 
     aes = AES.new(aes_key, AES.MODE_CBC, iv)  # 创建一个aes对象
@@ -135,38 +144,10 @@ def table_cipher_save(user_id, disk_speed_per, cpu, gpu, pass_failed, authorizat
     conn.close()
 
 
-def load_cipher_from_table(save_name, user_id,context):
-    # 连接到数据库
-    conn = pymysql.connect(**db_config)
-    cursor = conn.cursor()
-    # SQL 查询，用于获取 disk_speed_per 数据
-    sql = "SELECT disk_speed_per FROM logs WHERE user_id = %s"
-    user_id = 476807  # 假设你想获取 user_id 为 1 的记录
-    try:
-        cursor.execute(sql, (user_id,))
-        result = cursor.fetchone()  # 获取查询结果
-        if result:
-            disk_speed_per = result[0]
-            # 假设你想将二进制数据保存到文件中
-            with open(cipher_path + 'disk_speed_per_retrieved.bin', 'wb') as file:
-                file.write(disk_speed_per)
-            print("数据已成功读取并保存到文件中。")
-        else:
-            print("未找到对应的记录。")
-    except Exception as e:
-        print(f"发生错误：{e}")
-    disk_speed_per = load_cipher(context, cipher_path + 'disk_speed_per_retrieved.bin')
-
-    context, public_key, secret_key = load_all_param()
-    ckks_encoder = CKKSEncoder(context)
-    decryptor = Decryptor(context, secret_key)
-    disk_speed_per_plain = decryptor.decrypt(disk_speed_per)
-    disk_speed_per_plain = ckks_encoder.decode(disk_speed_per_plain)
-
-'''
-将svm格式的数据以同态加密的形式保存
-'''
 def save_svm_data_to_table(plain, context, public_key, scale, cipher_name):
+    """
+    将svm格式的数据以同态加密的形式保存
+    """
     ckks_encoder = CKKSEncoder(context)
     encryptor = Encryptor(context, public_key)
     # 编码
@@ -175,24 +156,29 @@ def save_svm_data_to_table(plain, context, public_key, scale, cipher_name):
     cipher = encryptor.encrypt(encode_plain)
     # 存储密文
     cipher.save(cipher_name)
-'''
-上传和下载流量统计
-'''
+
+
 inquire_cipher_path = "inquire_cipherbin/"
-def  log_flow_statistics(user_id):
+
+
+def log_flow_statistics(user_id):
+    """
+    上传和下载流量统计
+    """
     # 密态运算准备
-    print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
+    print('-' * 10 + '密态运算准备' + '-' * 10)
     context, public_key, secret_key = load_all_param()
     # 连接到数据库
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
     # SQL 查询，用于获取 disk_speed_per 数据
+    print('-' * 10 + '连接数据库并查询密态结果' + '-' * 10 + '\n')
     sql = "SELECT up_traffic,down_traffic FROM logs WHERE user_id = %s"
     try:
         cursor.execute(sql, (user_id,))
         results = cursor.fetchall()  # 获取所有符合条件的查询结果
         up_traffic_cipher_list = []
-        down_traffic_cipher_list=[]
+        down_traffic_cipher_list = []
         if results:
             for result in results:
                 up_traffic_bin, down_traffic_bin = result
@@ -200,20 +186,22 @@ def  log_flow_statistics(user_id):
                     f1.write(up_traffic_bin)
                 with open(inquire_cipher_path + 'down_traffic_cipher.bin', 'wb') as f2:
                     f2.write(down_traffic_bin)
-                up_traffic_cipher = load_cipher(context,inquire_cipher_path + 'up_traffic_cipher.bin')
-                down_traffic_cipher = load_cipher(context,inquire_cipher_path + 'down_traffic_cipher.bin')
+                up_traffic_cipher = load_cipher(context, inquire_cipher_path + 'up_traffic_cipher.bin')
+                down_traffic_cipher = load_cipher(context, inquire_cipher_path + 'down_traffic_cipher.bin')
                 up_traffic_cipher_list.append(up_traffic_cipher)
                 down_traffic_cipher_list.append(down_traffic_cipher)
 
-        he_add_n(up_traffic_cipher_list,"上传流量量统计:",pf=True)
-        he_add_n(down_traffic_cipher_list,"下载流量统计:",pf=True)
+        he_add_n(up_traffic_cipher_list, "上传流量量统计:", pf=True)
+        he_add_n(down_traffic_cipher_list, "下载流量统计:", pf=True)
 
     except Exception as e:
         print(f"发生错误：{e}")
-'''
-密态越权次数统计
-'''
+
+
 def log_transgressions_statistics(user_id):
+    """
+    密态越权次数统计
+    """
     # 密态运算准备
     print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
     context, public_key, secret_key = load_all_param()
@@ -221,6 +209,7 @@ def log_transgressions_statistics(user_id):
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
     # SQL 查询，用于获取 disk_speed_per 数据
+    print('-' * 10 + '连接数据库并查询密态结果' + '-' * 10 + '\n')
     sql = "SELECT transgression_number FROM logs WHERE user_id = %s"
     try:
         cursor.execute(sql, (user_id,))
@@ -230,11 +219,93 @@ def log_transgressions_statistics(user_id):
             for result in results:
                 with open(inquire_cipher_path + 'transgression_number_cipher.bin', 'wb') as f1:
                     f1.write(result[0])
-                transgression_number_cipher = load_cipher(context, inquire_cipher_path + 'transgression_number_cipher.bin')
+                transgression_number_cipher = load_cipher(context,
+                                                          inquire_cipher_path + 'transgression_number_cipher.bin')
                 transgression_number_cipher_list.append(transgression_number_cipher)
 
-        nums = he_add_n(transgression_number_cipher_list, "越权次数统计:",pf=False)
+        nums = he_add_n(transgression_number_cipher_list, "越权次数统计:")
         print("用户：{}越权次数一共{}次".format(user_id, int(nums[0])))
+    except Exception as e:
+        print(f"发生错误：{e}")
+
+
+def log_pass_failed_statistics(user_id):
+    """
+    登录失败统计
+    """
+    # 密态运算准备
+    print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
+    context, public_key, secret_key = load_all_param()
+    # 连接到数据库
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor()
+    # SQL 查询，用于获取 disk_speed_per 数据
+    print('-' * 10 + '连接数据库并查询密态结果' + '-' * 10 + '\n')
+    sql = "SELECT pass_failed FROM logs WHERE user_id = %s"
+    try:
+        cursor.execute(sql, (user_id,))
+        results = cursor.fetchall()  # 获取所有符合条件的查询结果
+        pass_failed_cipher_list = []
+        if results:
+            for result in results:
+                with open(inquire_cipher_path + 'pass_failed_cipher.bin', 'wb') as f1:
+                    f1.write(result[0])
+                pass_failed_cipher = load_cipher(context, inquire_cipher_path + 'pass_failed_cipher.bin')
+                pass_failed_cipher_list.append(pass_failed_cipher)
+
+        nums = he_add_n(pass_failed_cipher_list, "登录失败统计:")
+        print("用户：{}登录失败一共{}次".format(user_id, int(nums[0])))
+    except Exception as e:
+        print(f"发生错误：{e}")
+    return nums[0]
+
+
+def log_load_analysis(user_id):
+    """
+    通过用户最新的日志，cpu、gpu、disk_speed_per(磁盘当前/最大磁盘速度）数据进行负载分析
+    """
+    # 密态运算准备
+    print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
+    context, public_key, secret_key = load_all_param()
+    # 连接到数据库
+    conn = pymysql.connect(**db_config)
+    cursor = conn.cursor()
+    # SQL 查询，用于获取 disk_speed_per 数据
+    print('-' * 10 + '连接数据库并查询密态结果' + '-' * 10 + '\n')
+    sql = "SELECT cpu,gpu,disk_speed_per FROM logs WHERE user_id = %s"
+    try:
+        cursor.execute(sql, (user_id,))
+        results = cursor.fetchall()  # 获取所有符合条件的查询结果
+        cipher_list = []
+        if results:
+            # 去最新的数据进行分析
+            result = results[len(results) - 1]
+            cpu_bin, gpu_bin, disk_speed_per_bin = result
+            with open(inquire_cipher_path + 'cpu_cipher.bin', 'wb') as f1:
+                f1.write(cpu_bin)
+            with open(inquire_cipher_path + 'gpu_cipher.bin', 'wb') as f2:
+                f2.write(gpu_bin)
+            with open(inquire_cipher_path + 'disk_speed_per_cipher.bin', 'wb') as f3:
+                f3.write(disk_speed_per_bin)
+            cpu_cipher = load_cipher(context, inquire_cipher_path + 'cpu_cipher.bin')
+            gpu_cipher = load_cipher(context, inquire_cipher_path + 'gpu_cipher.bin')
+            disk_speed_per_cipher = load_cipher(context, inquire_cipher_path + 'disk_speed_per_cipher.bin')
+
+            const_ten = [10]
+            const_ten_cipher = he_cihper(const_ten)
+            disk_speed_score = he_mul_without_decrypt(const_ten_cipher, disk_speed_per_cipher)
+
+            cipher_list.append(cpu_cipher)
+            cipher_list.append(gpu_cipher)
+            cpu_gpu_score = he_add_n(cipher_list, "用户最新负载分析：")
+
+            s1 = decrypt_cipher(disk_speed_score)[0]
+            s2 = cpu_gpu_score[0]
+            finally_score = s1 + s2
+
+            print("用户：{}最新负载分数{:.2f}".format(user_id, finally_score))
+            if (finally_score >= 60): print("用户{}占用服务器资源异常！！！！".format(user_id))
+
     except Exception as e:
         print(f"发生错误：{e}")
 
@@ -245,8 +316,16 @@ if __name__ == '__main__':
     # excel_file = "datasets/table.xlsx"
     # excel_to_database(excel_file)
 
-    # 流量统计
+    # 1、流量统计
     # log_flow_statistics(user_id)
 
-    # 越权次数统计
-    log_transgressions_statistics(user_id)
+    # 2、越权次数统计
+    # log_transgressions_statistics(user_id)
+
+    # 3、登录失败统计
+    # count = log_pass_failed_statistics(user_id)
+    # if (int(count) >= 4): print("用户：{}账号存在风险!!!".format(user_id))
+
+    # 4、 负载分析
+    # Load_Analysis_Score = CPU + GPU + disk_speed/disk_max_speed * 10
+    log_load_analysis(user_id)

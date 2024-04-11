@@ -61,7 +61,13 @@ def load_cipher(context, cipher_name):
     cipher1.load(context, cipher_name)
     return cipher1
 
-
+def decrypt_cipher(cipher):
+    context, public_key, secret_key = load_all_param()
+    ckks_encoder = CKKSEncoder(context)
+    decryptor = Decryptor(context, secret_key)
+    plain = decryptor.decrypt(cipher)
+    result = ckks_encoder.decode(plain)
+    return result
 if __name__ == '__main__':
     context, public_key = load_pub_param()
     scale = 2.0 ** 40
