@@ -2,34 +2,34 @@ from seal import *
 import numpy as np
 
 
-def load_all_param():
+def load_all_param(path):
     print('-' * 10 + '加载公私钥' + '-' * 10)
     parms = EncryptionParameters(scheme_type.ckks)
-    parms.load("params.sealparams")
+    parms.load(path + "params.sealparams")
     context = SEALContext(parms)
     loaded_public_key = PublicKey()
-    loaded_public_key.load(context, "public_key.seal")
+    loaded_public_key.load(context, path + "public_key.seal")
     loaded_secret_key = SecretKey()
-    loaded_secret_key.load(context, "secret_key.sealsecretkey")
+    loaded_secret_key.load(context, path + "secret_key.sealsecretkey")
 
     return context, loaded_public_key, loaded_secret_key
 
 
-def load_pub_param():
+def load_pub_param(path):
     print('-' * 10 + '加载公钥' + '-' * 10)
     parms = EncryptionParameters(scheme_type.ckks)
-    parms.load("params.sealparams")
+    parms.load(path + "params.sealparams")
     context = SEALContext(parms)
     loaded_public_key = PublicKey()
-    loaded_public_key.load(context, "public_key.seal")
+    loaded_public_key.load(context, path + "public_key.seal")
     return context, loaded_public_key
 
 
-def he_cihper(plain):
+def he_cihper(plain, path):
     '''
     用户利用公钥将明文进行加密
     '''
-    context, public_key = load_pub_param()
+    context, public_key = load_pub_param(path)
     scale = 2.0 ** 40
     ckks_encoder = CKKSEncoder(context)
     slot_count = ckks_encoder.slot_count()
@@ -45,12 +45,12 @@ def he_cihper(plain):
     return cipher
 
 
-def he_add(cipher1, cipher2):
+def he_add(cipher1, cipher2, path):
     """
     同态加算子
     """
     print('-' * 10 + '服务器端同态加法计算' + '-' * 10)
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(path)
     evaluator = Evaluator(context)
     add_result = evaluator.add(cipher1, cipher2)
 
@@ -72,12 +72,20 @@ def he_add(cipher1, cipher2):
     return result
 
 
-def he_sub(cipher1, cipher2):
+def he_add_without_decrypt(cipher1, cipher2, path):
+    print('-' * 10 + '服务器端同态加法计算' + '-' * 10)
+    context, public_key, secret_key = load_all_param(path)
+    evaluator = Evaluator(context)
+    add_result = evaluator.add(cipher1, cipher2)
+    return add_result
+
+
+def he_sub(cipher1, cipher2, path):
     """
     同态减法算子
     """
     print('-' * 10 + '服务器端同态减法计算' + '-' * 10)
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(path)
     evaluator = Evaluator(context)
     sub_result = evaluator.sub(cipher1, cipher2)
 
@@ -99,12 +107,20 @@ def he_sub(cipher1, cipher2):
     return result
 
 
-def he_mul(cipher1, cipher2):
+def he_sub_without_decrypt(cipher1, cipher2, path):
+    print('-' * 10 + '服务器端减法计算' + '-' * 10)
+    context, public_key, secret_key = load_all_param(path)
+    evaluator = Evaluator(context)
+    sub_result = evaluator.sub(cipher1, cipher2)
+    return sub_result
+
+
+def he_mul(cipher1, cipher2, path):
     """
     同态乘法算子
     """
     print('-' * 10 + '服务器端同态乘法计算' + '-' * 10 + '\n')
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(path)
     evaluator = Evaluator(context)
     mul_result = evaluator.multiply(cipher1, cipher2)
 
@@ -126,23 +142,23 @@ def he_mul(cipher1, cipher2):
     return result
 
 
-def he_mul_without_decrypt(cipher1, cipher2):
+def he_mul_without_decrypt(cipher1, cipher2, path):
     """
     同态乘法算子，结果不解密
     """
     print('-' * 10 + '服务器端同态乘法计算' + '-' * 10)
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(path)
     evaluator = Evaluator(context)
     mul_result = evaluator.multiply(cipher1, cipher2)
     return mul_result
 
 
-def he_add_n(cipher_list, name, pf=False):
+def he_add_n(cipher_list, name, path, pf=False):
     '''
     多次同态加密相加
     '''
     print('-' * 10 + '服务器端同态加法多次计算' + '-' * 10)
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(path)
     scale = 2.0 ** 40
     ckks_encoder = CKKSEncoder(context)
     slot_count = ckks_encoder.slot_count()
@@ -173,15 +189,17 @@ def he_add_n(cipher_list, name, pf=False):
 if __name__ == '__main__':
     p1 = [4, 5, 456, 6]
     p2 = [4, 34, 5, 5]
-    c1 = he_cihper(p1)
-    c2 = he_cihper(p2)
+    path = './'
+    c1 = he_cihper(p1, path)
+    c2 = he_cihper(p2, path)
+
     # he add
-    he_add(c1, c2)
+    he_add(c1, c2, path)
 
     # he sub
-    he_sub(c1, c2)
+    he_sub(c1, c2, path)
 
     # he mul
-    he_mul(c1, c2)
+    he_mul(c1, c2, path)
 
     print('-' * 10 + 'end' + '-' * 10 + '\n')

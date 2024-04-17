@@ -24,28 +24,28 @@ def save_params():
     secret_key.save("secret_key.sealsecretkey")
 
 
-def load_all_param():
+def load_all_param(path):
     print('-' * 10 + '加载公私钥' + '-' * 10 + '\n')
     parms = EncryptionParameters(scheme_type.ckks)
-    parms.load("params.sealparams")
+    parms.load(path+"params.sealparams")
     context = SEALContext(parms)
     loaded_public_key = PublicKey()
-    loaded_public_key.load(context, "public_key.seal")
+    loaded_public_key.load(context, path+"public_key.seal")
     loaded_secret_key = SecretKey()
-    loaded_secret_key.load(context, "secret_key.sealsecretkey")
+    loaded_secret_key.load(context,path+ "secret_key.sealsecretkey")
 
     return context, loaded_public_key, loaded_secret_key
 
 
-def load_pub_param():
+def load_pub_param(path):
     print("-" * 10 + "加载公钥" + "-" * 10 + '\n')
     parms = EncryptionParameters(scheme_type.ckks)
-    parms.load("params.sealparams")
+    parms.load(path+"params.sealparams")
     context = SEALContext(parms)
     loaded_public_key = PublicKey()
-    loaded_public_key.load(context, "public_key.seal")
-    return context, loaded_public_key
+    loaded_public_key.load(context, path+"public_key.seal")
 
+    return context, loaded_public_key
 
 def save_cipher(plain, context, public_key, scale, cipher_name):
     ckks_encoder = CKKSEncoder(context)
@@ -63,13 +63,14 @@ def load_cipher(context, cipher_name):
     cipher1.load(context, cipher_name)
     return cipher1
 
-def decrypt_cipher(cipher):
-    context, public_key, secret_key = load_all_param()
+def decrypt_cipher(cipher,path):
+    context, public_key, secret_key = load_all_param(path)
     ckks_encoder = CKKSEncoder(context)
     decryptor = Decryptor(context, secret_key)
     plain = decryptor.decrypt(cipher)
     result = ckks_encoder.decode(plain)
     return result
+
 def calculate_hash(cipher,salt):
     '''
     由于cipher中存在噪声，每次生成的噪声都可能不同
@@ -81,29 +82,37 @@ def calculate_hash(cipher,salt):
     cipher_hash = hash_object.hexdigest()
     return cipher_hash
 
+def cipher_hash_test(path):
+    '''
+     测试密文hash
+    '''
+    context, public_key = load_pub_param(path)
+    cipher1 = load_cipher(context, cipher_name='cipher1.bin')
+    # 密文hash测试
+    salt = b'random salt'
+    sha = calculate_hash(cipher1, salt)
+    print(sha)
+
 if __name__ == '__main__':
-    context, public_key = load_pub_param()
+    path = './'
+    # context, public_key = load_pub_param(path)
     # scale = 2.0 ** 40
     # ckks_encoder = CKKSEncoder(context)
     # slot_count = ckks_encoder.slot_count()
-    # plain1 = [3.1415926] * slot_count
-    # plain2 = [2.3] * slot_count
+    # plain1 = [3] * slot_count
+    # plain2 = [26] * slot_count
     # save_cipher(plain1, context, public_key, scale, cipher_name='cipher1.bin')
     # save_cipher(plain2, context, public_key, scale, cipher_name='cipher2.bin')
 
-    # 云端加载密文
-    cipher1 = load_cipher(context, cipher_name='cipher1.bin')
-    cipher2 = load_cipher(context, cipher_name='cipher2.bin')
-    # 密文hash测试
-    salt= b'random salt'
-    sha= calculate_hash(cipher1,salt)
-    print(sha)
-
+    # # 云端加载密文
+    # cipher1 = load_cipher(context, cipher_name='cipher1.bin')
+    # cipher2 = load_cipher(context, cipher_name='cipher2.bin')
+    #
     # evaluator = Evaluator(context)
     # add_result = evaluator.add(cipher1, cipher2)
     # mul_result = evaluator.multiply(cipher1, cipher2)
     # sub_result = evaluator.sub(cipher1, cipher2)
-
+    #
     # 边缘节点解密
     # context, public_key, secret_key = load_all_param()
     # ckks_encoder = CKKSEncoder(context)
@@ -125,3 +134,6 @@ if __name__ == '__main__':
     # print(mul_plain)
     # print("sub_plain:  ")
     # print(sub_plain)
+
+    # 测试密文hash
+    cipher_hash_test(path)

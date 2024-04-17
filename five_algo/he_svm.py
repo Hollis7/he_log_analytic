@@ -1,13 +1,15 @@
-from read_excel import *
-from three_operator.save_param import *
+from five_algo_analysis import *
 from numpy import *
 from seal import *
+
+# 服务器公私钥位置
+seal_key_path = '../three_operator/'
 
 
 def he_calculator(cipher_list):
     print("-" * 10 + "加载密态svm权重" + "-" * 10 + '\n')
     w = loadtxt("w.txt").tolist()
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(seal_key_path)
     scale = 2.0 ** 40
     ckks_encoder = CKKSEncoder(context)
     slot_count = ckks_encoder.slot_count()
@@ -84,7 +86,7 @@ def encry_data(excel_file):
 
     # 开始模拟加密
     encrypt_list = []
-    context, public_key = load_pub_param()
+    context, public_key = load_pub_param(seal_key_path)
     scale = 2.0 ** 40
     ckks_encoder = CKKSEncoder(context)
     slot_count = ckks_encoder.slot_count()
@@ -99,13 +101,14 @@ def encry_data(excel_file):
         # 加密
         cipher = encryptor.encrypt(encode_plain)
         encrypt_list.append(cipher)
-    return encrypt_list,label
+    return encrypt_list, label
+
 
 def predict_one(id):
     '''
     对某一条日志进行svm校验是否异常
     '''
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(seal_key_path)
     db_config = {
         'host': 'localhost',
         'user': 'hdb',
@@ -119,27 +122,28 @@ def predict_one(id):
     cursor = conn.cursor()
     # SQL 查询，用于获取 disk_speed_per 数据
     sql = "SELECT user_id,svm_cipher FROM logs WHERE id = %s"
-    cipher_list=[]
+    cipher_list = []
     try:
         cursor.execute(sql, (id,))
         print("根据:id={}查询密态日志".format(id))
-        result = cursor.fetchone() # 获取符合条件的查询结果
+        result = cursor.fetchone()  # 获取符合条件的查询结果
         if result:
-            user_id,svm_cipher_bin =result
+            user_id, svm_cipher_bin = result
             with open(inquire_cipher_path + 'svm_cipher.bin', 'wb') as f1:
                 f1.write(svm_cipher_bin)
-            svm_cipher = load_cipher(context,inquire_cipher_path + 'svm_cipher.bin')
+            svm_cipher = load_cipher(context, inquire_cipher_path + 'svm_cipher.bin')
             cipher_list.append(svm_cipher)
             print("读取密态svm异常检测格式数据成功！！！\n")
             plain = he_calculator(cipher_list)
             b = loadtxt("b.txt")
             f = sum(plain[0]) + b
-            if(f<-1):print("用户{}的操作存在异常！！！！".format(user_id))
-            else:print("用户{}的操作目前正常！！！！".format(user_id))
+            if (f < -1):
+                print("用户{}的操作存在异常！！！！".format(user_id))
+            else:
+                print("用户{}的操作目前正常！！！！".format(user_id))
 
     except Exception as e:
         print(f"发生错误：{e}")
-
 
 
 if __name__ == '__main__':
@@ -153,4 +157,3 @@ if __name__ == '__main__':
     # 某条日志记录异常检测
     predict_one(2)
     predict_one(21)
-

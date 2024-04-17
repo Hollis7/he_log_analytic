@@ -15,14 +15,16 @@ db_config = {
     'database': 'seal_log',
     'port': 3309,  # 你的 MySQL 端口号
 }
+# 保存各个关键词密文的位置
 cipher_path = 'cipherbin/'
-
-'''
-读取训练或者测试的excel数据
-'''
+# seal密钥的位置
+seal_key_path = "./"
 
 
 def excel_to_narray(excel_file):
+    '''
+    读取训练或者测试的excel数据
+    '''
     # 读取Excel文件
     df = pd.read_excel(excel_file)
 
@@ -33,15 +35,13 @@ def excel_to_narray(excel_file):
     return data, labels
 
 
-'''
-用日志中提取的关键词同态加密放到数据库表logs中，用excel中的表数据模拟
-'''
-
-
 def excel_to_database(excel_file):
+    '''
+    用日志中提取的关键词同态加密放到数据库表logs中，用excel中的表数据模拟
+    '''
     print('-' * 10 + '日志数据和关键数据存储数据库表logs' + '-' * 10 + '\n')
     # 加密准备
-    context, public_key = load_pub_param()
+    context, public_key = load_pub_param(seal_key_path)
     scale = 2.0 ** 40
     ckks_encoder = CKKSEncoder(context)
     slot_count = ckks_encoder.slot_count()
@@ -167,7 +167,7 @@ def log_flow_statistics(user_id):
     """
     # 密态运算准备
     print('-' * 10 + '密态运算准备' + '-' * 10)
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(seal_key_path)
     # 连接到数据库
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
@@ -191,8 +191,8 @@ def log_flow_statistics(user_id):
                 up_traffic_cipher_list.append(up_traffic_cipher)
                 down_traffic_cipher_list.append(down_traffic_cipher)
 
-        he_add_n(up_traffic_cipher_list, "上传流量量统计:", pf=True)
-        he_add_n(down_traffic_cipher_list, "下载流量统计:", pf=True)
+        he_add_n(up_traffic_cipher_list, "上传流量量统计:", seal_key_path,pf=True)
+        he_add_n(down_traffic_cipher_list, "下载流量统计:", seal_key_path,pf=True)
 
     except Exception as e:
         print(f"发生错误：{e}")
@@ -204,7 +204,7 @@ def log_transgressions_statistics(user_id):
     """
     # 密态运算准备
     print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(seal_key_path)
     # 连接到数据库
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
@@ -223,7 +223,7 @@ def log_transgressions_statistics(user_id):
                                                           inquire_cipher_path + 'transgression_number_cipher.bin')
                 transgression_number_cipher_list.append(transgression_number_cipher)
 
-        nums = he_add_n(transgression_number_cipher_list, "越权次数统计:")
+        nums = he_add_n(transgression_number_cipher_list, "越权次数统计:",seal_key_path)
         print("用户：{}越权次数一共{}次".format(user_id, int(nums[0])))
     except Exception as e:
         print(f"发生错误：{e}")
@@ -235,7 +235,7 @@ def log_pass_failed_statistics(user_id):
     """
     # 密态运算准备
     print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(seal_key_path)
     # 连接到数据库
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
@@ -253,7 +253,7 @@ def log_pass_failed_statistics(user_id):
                 pass_failed_cipher = load_cipher(context, inquire_cipher_path + 'pass_failed_cipher.bin')
                 pass_failed_cipher_list.append(pass_failed_cipher)
 
-        nums = he_add_n(pass_failed_cipher_list, "登录失败统计:")
+        nums = he_add_n(pass_failed_cipher_list, "登录失败统计:",seal_key_path)
         print("用户：{}登录失败一共{}次".format(user_id, int(nums[0])))
     except Exception as e:
         print(f"发生错误：{e}")
@@ -266,7 +266,7 @@ def log_load_analysis(user_id):
     """
     # 密态运算准备
     print('-' * 10 + '密态运算准备' + '-' * 10 + '\n')
-    context, public_key, secret_key = load_all_param()
+    context, public_key, secret_key = load_all_param(seal_key_path)
     # 连接到数据库
     conn = pymysql.connect(**db_config)
     cursor = conn.cursor()
@@ -292,14 +292,14 @@ def log_load_analysis(user_id):
             disk_speed_per_cipher = load_cipher(context, inquire_cipher_path + 'disk_speed_per_cipher.bin')
 
             const_ten = [10]
-            const_ten_cipher = he_cihper(const_ten)
-            disk_speed_score = he_mul_without_decrypt(const_ten_cipher, disk_speed_per_cipher)
+            const_ten_cipher = he_cihper(const_ten,seal_key_path)
+            disk_speed_score = he_mul_without_decrypt(const_ten_cipher, disk_speed_per_cipher,seal_key_path)
 
             cipher_list.append(cpu_cipher)
             cipher_list.append(gpu_cipher)
-            cpu_gpu_score = he_add_n(cipher_list, "用户最新负载分析：")
+            cpu_gpu_score = he_add_n(cipher_list, "用户最新负载分析：",seal_key_path)
 
-            s1 = decrypt_cipher(disk_speed_score)[0]
+            s1 = decrypt_cipher(disk_speed_score,seal_key_path)[0]
             s2 = cpu_gpu_score[0]
             finally_score = s1 + s2
 
@@ -311,7 +311,7 @@ def log_load_analysis(user_id):
 
 
 if __name__ == '__main__':
-    user_id = 467165
+    user_id = 241786
     # 数据存入数据库
     # excel_file = "datasets/table.xlsx"
     # excel_to_database(excel_file)
