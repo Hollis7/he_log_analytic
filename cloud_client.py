@@ -1,4 +1,6 @@
 import requests
+
+from five_algo.cs_ip_adrress import get_public_ip
 from three_operator.save_cipher import *
 from three_operator.three_op import *
 
@@ -40,6 +42,7 @@ def send_files(url, filepath1, filepath2, operation, output_filepath):
 
 
 if __name__ == '__main__':
+    get_public_ip()
     # 服务器地址
     url = 'http://localhost:40000/compute'
     # 替换为实际文件路径和操作
