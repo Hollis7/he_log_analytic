@@ -1,6 +1,8 @@
 import logging
 
 from flask import Flask, request, jsonify, send_file
+
+from five_algo.cs_ip_adrress import get_public_ip
 from three_operator.save_cipher import load_cipher
 from three_operator.three_op import *
 import os
@@ -9,7 +11,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 app.config['KEY_PATH'] = 'three_operator/'
 # 设置日志级别
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/compute', methods=['POST'])
 def compute():
@@ -20,8 +22,8 @@ def compute():
     file1 = request.files['file1']
     file2 = request.files['file2']
     operation = request.form['operation']
-    
-    app.logger.info("path is exist:{}".format(os.path.exists(app.config['KEY_PATH']+"params.sealparams")))
+
+    # app.logger.info("path is exist:{}".format(os.path.exists(app.config['KEY_PATH']+"params.sealparams")))
     context, public_key = load_pub_param(app.config['KEY_PATH'])
 
     # 示例操作：合并文件
@@ -43,16 +45,12 @@ def compute():
     res.save(app.config['UPLOAD_FOLDER'] + 'res_cipher.bin')
     return send_file(app.config['UPLOAD_FOLDER'] + 'res_cipher.bin')
 
-
-
-
-
-
-
 @app.route('/', methods=['GET'])
 def home():
     return 'Server is running'
 
 
+
 if __name__ == '__main__':
+    get_public_ip()
     app.run(host='0.0.0.0', port=40000, debug=True)
