@@ -55,6 +55,6 @@ if __name__ == '__main__':
     c1.save(filepath1)
     c2.save(filepath2)
 
-    operation = 'add'  # add、mul、sub
+    operation = 'mul'  # add、mul、sub
     output_filepath = 'client_download/'
     send_files(url, filepath1, filepath2, operation, output_filepath)

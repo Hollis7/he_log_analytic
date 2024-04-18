@@ -74,7 +74,7 @@ def he_add(cipher1, cipher2, path):
 
 def he_add_without_decrypt(cipher1, cipher2, path):
     print('-' * 10 + '服务器端同态加法计算' + '-' * 10)
-    context, public_key, secret_key = load_all_param(path)
+    context, public_key = load_pub_param(path)
     evaluator = Evaluator(context)
     add_result = evaluator.add(cipher1, cipher2)
     return add_result
