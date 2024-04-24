@@ -1,11 +1,10 @@
 import logging
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file,send_from_directory
 
 from five_algo.cs_ip_adrress import get_public_ip
-from three_operator.save_cipher import load_cipher
+from three_operator.save_cipher import load_cipher,calculate_hash
 from three_operator.three_op import *
-import os
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -41,9 +40,24 @@ def compute():
         res = he_mul_without_decrypt(cipher1,cipher2,app.config['KEY_PATH'])
     else:
         return jsonify({"error": "Unsupported operation"}), 400
+    # 新增：将哈希值保存到文件
+    salt = b'random salt' # 盐，可以修改，实现分析结果完整性
+    res_hash =calculate_hash(res,salt)
 
+    with open(app.config['UPLOAD_FOLDER']+"res_hash.txt", 'w') as hash_file:
+        hash_file.write(res_hash)
+    # 密文结果保存
     res.save(app.config['UPLOAD_FOLDER'] + 'res_cipher.bin')
-    return send_file(app.config['UPLOAD_FOLDER'] + 'res_cipher.bin')
+    # return send_file(app.config['UPLOAD_FOLDER'] + 'res_cipher.bin')
+    # 返回文件和哈希值
+    return jsonify({
+        'result_file_url': 'download/res_cipher.bin',
+        'result_hash_url': 'download/res_hash.txt'
+    })
+
+@app.route('/download/<filename>', methods=['GET'])
+def download(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 @app.route('/', methods=['GET'])
 def home():
