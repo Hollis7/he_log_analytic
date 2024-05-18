@@ -44,7 +44,7 @@ def send_files(url, filepath1, filepath2, operation, output_filepath):
             print("locally downloaded cipher_hash:{}".format(cipher_hash))
             print("result_hash_response:{}".format(result_hash_response.content))
             if cipher_hash == result_hash_response.content.decode('utf-8'):
-                print("密文成功解密，结果完整性验证hash一致")
+                print("结果完整性验证hash一致")
             print("-" * 10 + "解密结果如下" + "-" * 10)
             res = decrypt_cipher(res_cipher, all_key_path)
 
